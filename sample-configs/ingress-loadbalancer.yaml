@@ -1,0 +1,129 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: swarm-nginx-ingress
+  namespace: swarm
+spec:
+  type: LoadBalancer
+  selector:
+    app: swarm-nginx-ingress-lb
+  # clusterIP: CHANGEME - 10.0.27.175 - CHANGEME (BTW. do we need to specify this?)
+  loadBalancerIP: 13.74.157.139
+  ports:
+  - protocol: TCP
+    port: 80
+    name: http
+  - protocol: TCP
+    port: 443
+    name: https
+  - protocol: TCP
+    port: 30303
+    name: geth-external
+  - protocol: TCP
+    port: 30399
+    name: bzzd-30399
+  - protocol: TCP
+    port: 30400
+    name: bzzd-30400
+  - protocol: TCP
+    port: 30401
+    name: bzzd-30401
+  - protocol: TCP
+    port: 30402
+    name: bzzd-30402
+  - protocol: TCP
+    port: 30403
+    name: bzzd-30403
+  - protocol: TCP
+    port: 30404
+    name: bzzd-30404
+  - protocol: TCP
+    port: 30405
+    name: bzzd-30405
+  - protocol: TCP
+    port: 30406
+    name: bzzd-30406
+  - protocol: TCP
+    port: 30407
+    name: bzzd-30407
+  - protocol: TCP
+    port: 30408
+    name: bzzd-30408
+  - protocol: TCP
+    port: 30409
+    name: bzzd-30409
+  - protocol: TCP
+    port: 30410
+    name: bzzd-30410
+  - protocol: TCP
+    port: 30411
+    name: bzzd-30411
+  - protocol: TCP
+    port: 30412
+    name: bzzd-30412
+  - protocol: TCP
+    port: 30413
+    name: bzzd-30413
+  - protocol: TCP
+    port: 30414
+    name: bzzd-30414
+  - protocol: TCP
+    port: 30415
+    name: bzzd-30415
+  - protocol: TCP
+    port: 30416
+    name: bzzd-30416
+  - protocol: TCP
+    port: 30417
+    name: bzzd-30417
+  - protocol: TCP
+    port: 30418
+    name: bzzd-30418
+  - protocol: TCP
+    port: 30419
+    name: bzzd-30419
+  - protocol: TCP
+    port: 30420
+    name: bzzd-30420
+  - protocol: TCP
+    port: 30421
+    name: bzzd-30421
+  - protocol: TCP
+    port: 30422
+    name: bzzd-30422
+  - protocol: TCP
+    port: 30423
+    name: bzzd-30423
+  - protocol: TCP
+    port: 30424
+    name: bzzd-30424
+  - protocol: TCP
+    port: 30425
+    name: bzzd-30425
+  - protocol: TCP
+    port: 30426
+    name: bzzd-30426
+  - protocol: TCP
+    port: 30427
+    name: bzzd-30427
+  - protocol: TCP
+    port: 30428
+    name: bzzd-30428
+  - protocol: TCP
+    port: 30429
+    name: bzzd-30429
+  - protocol: TCP
+    port: 30430
+    name: bzzd-30430
+  - protocol: TCP
+    port: 30431
+    name: bzzd-30431
+  - protocol: TCP
+    port: 30432
+    name: bzzd-30432
+  - protocol: TCP
+    port: 30433
+    name: bzzd-30433
+  - protocol: TCP
+    port: 30434
+    name: bzzd-30434  
