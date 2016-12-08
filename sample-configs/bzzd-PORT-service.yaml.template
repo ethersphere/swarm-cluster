@@ -1,0 +1,14 @@
+# We have one service to load-balance all swarm http requests and we have one service per 
+# bzzd instance so we can talk to it directly. The latter one is configured here: 
+apiVersion: v1
+kind: Service
+metadata:
+  name: bzzd-PORTNUMBER_SHOULD_GO_HERE
+  namespace: swarm
+spec:
+  selector: 
+    appn: bzzd-PORTNUMBER_SHOULD_GO_HERE
+  ports:
+    - protocol: TCP
+      port: PORTNUMBER_SHOULD_GO_HERE
+      targetPort: bzzd-PORTNUMBER_SHOULD_GO_HERE

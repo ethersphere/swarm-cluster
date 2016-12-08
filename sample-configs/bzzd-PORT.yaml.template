@@ -1,0 +1,62 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: "bzzd-PORTNUMBER_SHOULD_GO_HERE"
+#  generateName: "bzzd-"
+  namespace: swarm
+spec:
+  replicas: 1
+  selector: 
+    matchLabels:
+      appn: bzzd-PORTNUMBER_SHOULD_GO_HERE
+  template:
+    metadata:
+      labels:
+        app: bzzd
+        appn: bzzd-PORTNUMBER_SHOULD_GO_HERE
+    spec:
+      containers:
+        - name: bzzd-PORTNUMBER_SHOULD_GO_HERE
+          image: cobordism/swarm:bzzd-ubuntu
+          imagePullPolicy: Always
+          env:
+            - name: ETHAPI
+              value: "http://geth:8545"
+            - name: BZZ_HTTP_PORT
+              value: "8080"
+            - name: BZZ_PORT
+              value: "PORTNUMBER_SHOULD_GO_HERE" 
+            - name: DATADIR
+              value: "/root/.ethereum/PORTNUMBER_SHOULD_GO_HERE"
+            - name: BZZACCOUNT
+              valueFrom:
+                secretKeyRef:
+                  name: bzzd-key-PORTNUMBER_SHOULD_GO_HERE
+                  key: bzzaccount
+          ports:
+            - containerPort: PORTNUMBER_SHOULD_GO_HERE 
+              name: "bzzd-port"
+            - containerPort: 8080
+              name: "bzzd-http-port"
+          volumeMounts:
+            - mountPath: /root/.ethereum
+              name: "swarmfiles"
+            - mountPath: "/root/keyimport"
+              name: "keyimport"
+              readOnly: true
+            - mountPath: "/root/bzzdstartup"
+              name: "bzzd-startup-script"
+              readOnly: true
+      restartPolicy: "Always"
+      volumes:
+        - name: "swarmfiles"
+          azureFile:
+            secretName: azure-storage-secret
+            shareName: swarmstorage
+            readOnly: false
+        - name: "keyimport"
+          secret:
+            secretName: bzzd-key-PORTNUMBER_SHOULD_GO_HERE
+        - name: "bzzd-startup-script"
+          secret:
+            secretName: bzzd-startup-script
