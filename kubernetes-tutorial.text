@@ -1,0 +1,289 @@
+Kubernetes Cluster - tutorial 101
+
+
+
+
+Part 1. Kubernetes Tutorial
+============================
+============================
+
+
+1. Starting a local cluster.
+=============================
+
+We can start a local cluster with 'minkube'. This starts a VirtualBox virtual machine locally to act as the kubernetes cluster. More info here: https://github.com/kubernetes/minikube
+
+Installation
+------------
+On MacOS
+	curl -Lo minikube https://storage.googleapis.com/minikube/releases/latest/minikube-darwin-amd64 && chmod +x minikube && sudo mv minikube /usr/local/bin/
+
+On Linux
+	curl -Lo minikube https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64 && chmod +x minikube && sudo mv minikube /usr/local/bin/
+
+Initialisation
+--------------
+
+	minikube start
+
+This will start a VirtualBox minikube. The screen shows a "Boot2Docker" splash screen.
+
+Useful commands
+-----------------
+
+	minikube start
+	minikube stop
+	minikube ip #IP on Host-only network on which to interact with pods / services
+	minikube dashboard #activate the kubernetes dashboard (very useful for overview)
+
+
+2. Controlling the cluster with kubectl
+=========================================
+
+Installation
+--------------
+
+Download kubectl release here: https://github.com/kubernetes/kubernetes/releases
+
+Then,
+On MacOS
+	sudo cp kubernetes/platforms/darwin/amd64/kubectl /usr/local/bin/kubectl
+
+On Linux
+	sudo cp kubernetes/platforms/linux/amd64/kubectl /usr/local/bin/kubectl
+
+You also need to ensure it’s executable:
+	sudo chmod +x /usr/local/bin/kubectl
+
+Test if it works:
+	kubectl version
+	kubectl cluster-info
+
+Exploring the (empty) cluster
+------------------------------
+At this point our cluster contains no pods. It contains one node and one service only. We can see that with kubectl.
+
+Example:
+	kubectl get nodes
+
+We have a 1 node local cluster and theonly node is 'minikube' so our output looks like:
+	cobordism@espresso:~$ kubectl get nodes
+	NAME       STATUS    AGE
+	minikube   Ready     3m
+
+Launching an application on the cluster
+---------------------------------------
+To run a docker image we use 'kubectl run'
+
+	kubectl run official-geth --image=ethereum/client-go:v1.5.2 
+
+Examine what we have done:
+	kubectl get deployments
+	kubectl get pods
+	kubectl describe deployment official-geth
+	kubectl describe pods
+
+To get rid of it again do:
+	kubectl delete deployment official-geth
+
+Exploring the application
+--------------------------
+
+get pods:
+	kubectl get pods
+
+output:
+	NAME                            READY     STATUS    RESTARTS   AGE
+	official-geth-737453820-j75wm   1/1       Running   0          4m
+
+Save the name of the pod:
+	export POD_NAME=official-geth-737453820-j75wm
+	# or
+	export POD_NAME=$(kubectl get pods -o go-template --template '{{range .items}}{{.metadata.name}}{{"\n"}}{{end}}')
+	echo Name of the Pod: $POD_NAME
+
+describe:
+	kubectl describe pod $POD_NAME
+
+output: plenty of info.
+
+logs:
+	kubectl logs $POD_NAME
+
+execute commands:
+	kubectl exec $POD_NAME date
+	kubectl exec $POD_NAME ls
+	kubectl exec $POD_NAME -- ls -l
+	kubectl exec -ti $POD_NAME -- /geth attach
+
+
+Exposing the application to the outside
+----------------------------------------
+
+quote: While Pods do have their own unique IP across the cluster, those IP’s are not exposed outside Kubernetes. Taking into account that over time Pods may be terminated, deleted or replaced by other Pods, we need a way to let other Pods and applications automatically discover each other. Kubernetes addresses this by grouping Pods in Services. A Kubernetes Service is an abstraction layer which defines a logical set of Pods and enables external traffic exposure, load balancing and service discovery for those Pods.
+
+list services:
+	kubectl get services
+
+(we only have the default minikube service 'kubernetes')
+
+expose official-geth deployment:
+	kubectl expose deployment/official-geth --type="NodePort" --port 8080
+
+check:
+	kubectl get services
+	kubectl describe service official-geth
+
+From the output we see that NodePort was set to (in my case) 30608
+
+	export NODE_PORT=$(kubectl get services/official-geth -o go-template='{{(index .spec.ports 0).nodePort}}')
+	echo NODE_PORT=$NODE_PORT
+
+At this point I am already a little confused about all the different IPs and ports. 
+There are a lot of example commands here
+	kubectl expose -h
+
+Remember, you can always see an overview on the kubernetes dashboard.
+
+
+3. Storage
+============
+
+Goal: add persistent storage to a docker container in a pod on a node in a service on the cluster.
+
+The types of persistent volume are described here: http://kubernetes.io/docs/user-guide/persistent-volumes/#types-of-persistent-volumes
+We will eventually want AzureFile but for now we will use a local directory as a test. Type=HostPath
+
+Creating PersistentVolumes
+---------------------------
+
+Let us prepare a directory. This has to be on the node where the pod will run. Our pod is minikube so:
+	minikube ssh
+	mkdir -p /tmp/kubernetes/123456789
+	exit
+
+Create a file called localstorage.yaml with content:
+
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: pv0001
+  labels:
+    type: local
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteMany
+  hostPath:
+    path: "/tmp/kubernetes/123456789"
+
+and then create the PersistentStorage via:
+	kubectl create -f ./localstorage.yaml 
+
+check:
+	kubectl get pv
+
+We have created a persistent volume. For pods to use the persistent volume, they must create a PersistentVolumeClaim.
+
+Creating PersistentVolumeClaims
+--------------------------------
+
+Create a file called geth-storage-claim.yaml with content:
+
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: gethclaim-1
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 3Gi
+
+create the claim:
+	kubectl create -f ./geth-storage-claim.yaml 
+
+examine:
+	kubectl get pvc
+	kubectl get pv
+
+After a while, the claim will be matched to a volume. (PersistentVolumeClaimBinder process)
+It is the claims that are used by pods as storage volumes.
+
+When we are done with the claim, we can delete it like so:
+	kubectl delete pvc gethclaim-1
+
+Launching geth with PersistentStorage
+--------------------------------------
+
+Let's kill what we had so far
+	kubectl delete deployment official-geth
+
+Next, create a file called gethpod.yaml with contents:
+
+kind: Pod
+apiVersion: v1
+metadata:
+  name: gethpod
+  labels:
+    name: justagethnode
+spec:
+  containers:
+    - name: aronsgeth
+      image: ethereum/client-go
+      ports:
+        - containerPort: 30303
+          name: "geth-node-port"
+      volumeMounts:
+      - mountPath: "/root/.ethereum"
+        name: aronsstorage
+  volumes:
+    - name: aronsstorage
+      persistentVolumeClaim:
+       claimName: gethclaim-1
+
+and create the pod:
+	kubectl create -f ./gethpod.yaml 
+
+Now we want to expose the geth node to the outside world, so we have to create a service.
+Create gethservice.json with contents:
+
+ 
+{
+  "kind": "Service",
+  "apiVersion": "v1",
+  "metadata": {
+    "name": "gethservice"
+  },
+  "spec": {
+    "ports": [
+      {
+        "protocol": "TCP",
+        "port": 33333,
+        "targetPort": "geth-node-port"
+      }
+    ],
+    "selector": {
+      "name": "justagethnode"
+    }
+  }
+}
+
+and create the service:
+	kubectl create -f ./gethservice.json 
+
+Now we should have geth running on port 33333.
+Check services:
+	kubectl get services
+
+this will tell you the cluster-ip. In my case I have geth running at
+	10.0.0.213:33333
+
+
+
+======================================================================
+======================================================================
+
+

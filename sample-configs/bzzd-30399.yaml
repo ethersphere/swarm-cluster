@@ -1,0 +1,62 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: "bzzd-30399"
+#  generateName: "bzzd-"
+  namespace: swarm
+spec:
+  replicas: 1
+  selector: 
+    matchLabels:
+      appn: bzzd-30399
+  template:
+    metadata:
+      labels:
+        app: bzzd
+        appn: bzzd-30399
+    spec:
+      containers:
+        - name: bzzd-30399
+          image: cobordism/swarm:bzzd-ubuntu
+          imagePullPolicy: Always
+          env:
+            - name: ETHAPI
+              value: "http://geth:8545"
+            - name: BZZ_HTTP_PORT
+              value: "8080"
+            - name: BZZ_PORT
+              value: "30399" 
+            - name: DATADIR
+              value: "/root/.ethereum/30399"
+            - name: BZZACCOUNT
+              valueFrom:
+                secretKeyRef:
+                  name: bzzd-key-30399
+                  key: bzzaccount
+          ports:
+            - containerPort: 30399 
+              name: "bzzd-port"
+            - containerPort: 8080
+              name: "bzzd-http-port"
+          volumeMounts:
+            - mountPath: /root/.ethereum
+              name: "swarmfiles"
+            - mountPath: "/root/keyimport"
+              name: "keyimport"
+              readOnly: true
+            - mountPath: "/root/bzzdstartup"
+              name: "bzzd-startup-script"
+              readOnly: true
+      restartPolicy: "Always"
+      volumes:
+        - name: "swarmfiles"
+          azureFile:
+            secretName: azure-storage-secret
+            shareName: swarmstorage
+            readOnly: false
+        - name: "keyimport"
+          secret:
+            secretName: bzzd-key-30399
+        - name: "bzzd-startup-script"
+          secret:
+            secretName: bzzd-startup-script

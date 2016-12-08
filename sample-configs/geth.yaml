@@ -1,0 +1,33 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: "geth"
+  generateName: "geth-"
+  namespace: swarm
+spec:
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: geth
+    spec:
+      containers:
+        - name: geth
+          image: arachnid/geth:master
+          imagePullPolicy: Always
+          args:
+            - "--fast"
+            - "--testnet"
+            - "--rpc"
+            - "--nat=extip:13.74.157.139"
+            - "--ipcpath=/geth.ipc"
+            - "--networkid=3"
+            - "--rpcaddr=0.0.0.0"
+            - "--rpccorsdomain=*"
+            - "--rpcapi=eth,net,web3,txpool"
+            - "--support-dao-fork"
+          ports:
+            - containerPort: 30303
+              name: "geth-port"
+            - containerPort: 8545
+              name: "geth-rpc-port"

@@ -1,0 +1,373 @@
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: swarm-nginx-ingress-controller
+  namespace: swarm
+  labels:
+    app: swarm-nginx-ingress-lb
+spec:
+  replicas: 1
+  selector:
+    app: swarm-nginx-ingress-lb
+  template:
+    metadata:
+      labels:
+        app: swarm-nginx-ingress-lb
+        name: swarm-nginx-ingress-lb
+    spec:
+      terminationGracePeriodSeconds: 60
+      containers:
+      - image: gcr.io/google_containers/nginx-ingress-controller:0.8.3
+        name: swarm-nginx-ingress-lb
+        imagePullPolicy: Always
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 80
+            scheme: HTTP
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 80
+            scheme: HTTP
+          initialDelaySeconds: 10
+          timeoutSeconds: 1
+        # use downward API
+        env:
+          - name: POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: POD_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+        ports:
+        - containerPort: 80
+          hostPort: 80
+        - containerPort: 443
+          hostPort: 443
+        - containerPort: 30303 #for the geth containers
+          hostPort: 30303
+        - containerPort: 30399 #the rest for the bzzd 
+          hostPort: 30399
+        - containerPort: 30400
+          hostPort: 30400
+        - containerPort: 30401
+          hostPort: 30401
+        - containerPort: 30402
+          hostPort: 30402
+        - containerPort: 30403
+          hostPort: 30403
+        - containerPort: 30404
+          hostPort: 30404
+        - containerPort: 30405
+          hostPort: 30405
+        - containerPort: 30406
+          hostPort: 30406
+        - containerPort: 30407
+          hostPort: 30407
+        - containerPort: 30408
+          hostPort: 30408
+        - containerPort: 30409
+          hostPort: 30409
+        - containerPort: 30410
+          hostPort: 30410
+        - containerPort: 30411
+          hostPort: 30411
+        - containerPort: 30412
+          hostPort: 30412
+        - containerPort: 30413
+          hostPort: 30413
+        - containerPort: 30414
+          hostPort: 30414
+        - containerPort: 30415
+          hostPort: 30415
+        - containerPort: 30416
+          hostPort: 30416
+        - containerPort: 30417
+          hostPort: 30417
+        - containerPort: 30418
+          hostPort: 30418
+        - containerPort: 30419
+          hostPort: 30419
+        - containerPort: 30420
+          hostPort: 30420
+        - containerPort: 30421
+          hostPort: 30421
+        - containerPort: 30422
+          hostPort: 30422
+        - containerPort: 30423
+          hostPort: 30423
+        - containerPort: 30424
+          hostPort: 30424
+        - containerPort: 30425
+          hostPort: 30425
+        - containerPort: 30426
+          hostPort: 30426
+        - containerPort: 30427
+          hostPort: 30427
+        - containerPort: 30428
+          hostPort: 30428
+        - containerPort: 30429
+          hostPort: 30429
+        - containerPort: 30430
+          hostPort: 30430
+        - containerPort: 30431
+          hostPort: 30431
+        - containerPort: 30432
+          hostPort: 30432
+        - containerPort: 30433
+          hostPort: 30433
+        - containerPort: 30434
+          hostPort: 30434
+        # we expose 18080 to access nginx stats in url /nginx-status
+        # this is optional
+        - containerPort: 18080
+          hostPort: 18080
+        args:
+        - /nginx-ingress-controller
+        - --default-backend-service=swarm/default-http-backend
+        - --tcp-services-configmap=swarm/tcp-configmap
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: swarm-nginx-ingress
+  namespace: swarm
+spec:
+  type: LoadBalancer
+  selector:
+    app: swarm-nginx-ingress-lb
+  # clusterIP: CHANGEME - 10.0.27.175 - CHANGEME (BTW. do we need to specify this?)
+  loadBalancerIP: 13.74.157.139
+  ports:
+  - protocol: TCP
+    port: 80
+    name: http
+  - protocol: TCP
+    port: 443
+    name: https
+  - protocol: TCP
+    port: 30303
+    name: geth-external
+  - protocol: TCP
+    port: 30399
+    name: bzzd-30399
+  - protocol: TCP
+    port: 30400
+    name: bzzd-30400
+  - protocol: TCP
+    port: 30401
+    name: bzzd-30401
+  - protocol: TCP
+    port: 30402
+    name: bzzd-30402
+  - protocol: TCP
+    port: 30403
+    name: bzzd-30403
+  - protocol: TCP
+    port: 30404
+    name: bzzd-30404
+  - protocol: TCP
+    port: 30405
+    name: bzzd-30405
+  - protocol: TCP
+    port: 30406
+    name: bzzd-30406
+  - protocol: TCP
+    port: 30407
+    name: bzzd-30407
+  - protocol: TCP
+    port: 30408
+    name: bzzd-30408
+  - protocol: TCP
+    port: 30409
+    name: bzzd-30409
+  - protocol: TCP
+    port: 30410
+    name: bzzd-30410
+  - protocol: TCP
+    port: 30411
+    name: bzzd-30411
+  - protocol: TCP
+    port: 30412
+    name: bzzd-30412
+  - protocol: TCP
+    port: 30413
+    name: bzzd-30413
+  - protocol: TCP
+    port: 30414
+    name: bzzd-30414
+  - protocol: TCP
+    port: 30415
+    name: bzzd-30415
+  - protocol: TCP
+    port: 30416
+    name: bzzd-30416
+  - protocol: TCP
+    port: 30417
+    name: bzzd-30417
+  - protocol: TCP
+    port: 30418
+    name: bzzd-30418
+  - protocol: TCP
+    port: 30419
+    name: bzzd-30419
+  - protocol: TCP
+    port: 30420
+    name: bzzd-30420
+  - protocol: TCP
+    port: 30421
+    name: bzzd-30421
+  - protocol: TCP
+    port: 30422
+    name: bzzd-30422
+  - protocol: TCP
+    port: 30423
+    name: bzzd-30423
+  - protocol: TCP
+    port: 30424
+    name: bzzd-30424
+  - protocol: TCP
+    port: 30425
+    name: bzzd-30425
+  - protocol: TCP
+    port: 30426
+    name: bzzd-30426
+  - protocol: TCP
+    port: 30427
+    name: bzzd-30427
+  - protocol: TCP
+    port: 30428
+    name: bzzd-30428
+  - protocol: TCP
+    port: 30429
+    name: bzzd-30429
+  - protocol: TCP
+    port: 30430
+    name: bzzd-30430
+  - protocol: TCP
+    port: 30431
+    name: bzzd-30431
+  - protocol: TCP
+    port: 30432
+    name: bzzd-30432
+  - protocol: TCP
+    port: 30433
+    name: bzzd-30433
+  - protocol: TCP
+    port: 30434
+    name: bzzd-30434  
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tcp-configmap
+data:
+  # 80: "swarm/bzzd-http:8080" #See Ingress swarm-ingress below
+  30303: "swarm/geth-external:30303"
+  30399: "swarm/bzzd-30399:30399"
+  30400: "swarm/bzzd-30400:30400"
+  30401: "swarm/bzzd-30401:30401"
+  30402: "swarm/bzzd-30402:30402"
+  30403: "swarm/bzzd-30403:30403"
+  30404: "swarm/bzzd-30404:30404"
+  30405: "swarm/bzzd-30405:30405"
+  30406: "swarm/bzzd-30406:30406"
+  30407: "swarm/bzzd-30407:30407"
+  30408: "swarm/bzzd-30408:30408"
+  30409: "swarm/bzzd-30409:30409"
+  30410: "swarm/bzzd-30410:30410"
+  30411: "swarm/bzzd-30411:30411"
+  30412: "swarm/bzzd-30412:30412"
+  30413: "swarm/bzzd-30413:30413"
+  30414: "swarm/bzzd-30414:30414"
+  30415: "swarm/bzzd-30415:30415"
+  30416: "swarm/bzzd-30416:30416"
+  30417: "swarm/bzzd-30417:30417"
+  30418: "swarm/bzzd-30418:30418"
+  30419: "swarm/bzzd-30419:30419"
+  30420: "swarm/bzzd-30420:30420"
+  30421: "swarm/bzzd-30421:30421"
+  30422: "swarm/bzzd-30422:30422"
+  30423: "swarm/bzzd-30423:30423"
+  30424: "swarm/bzzd-30424:30424"
+  30425: "swarm/bzzd-30425:30425"
+  30426: "swarm/bzzd-30426:30426"
+  30427: "swarm/bzzd-30427:30427"
+  30428: "swarm/bzzd-30428:30428"
+  30429: "swarm/bzzd-30429:30429"
+  30430: "swarm/bzzd-30430:30430"
+  30431: "swarm/bzzd-30431:30431"
+  30432: "swarm/bzzd-30432:30432"
+  30433: "swarm/bzzd-30433:30433"
+  30434: "swarm/bzzd-30434:30434"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: default-http-backend
+  namespace: swarm
+  labels:
+    app: default-http-backend
+spec:
+  ports:
+  - port: 80
+    targetPort: 8080
+    protocol: TCP
+    name: http
+  selector:
+    app: default-http-backend
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: default-http-backend
+  namespace: swarm
+spec:
+  replicas: 1
+  selector:
+    app: default-http-backend
+  template:
+    metadata:
+      labels:
+        app: default-http-backend
+    spec:
+      terminationGracePeriodSeconds: 60
+      containers:
+      - name: default-http-backend
+        # Any image is permissable as long as:
+        # 1. It serves a 404 page at /
+        # 2. It serves 200 on a /healthz endpoint
+        image: gcr.io/google_containers/defaultbackend:1.0
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 30
+          timeoutSeconds: 5
+        ports:
+        - containerPort: 8080
+        resources:
+          limits:
+            cpu: 10m
+            memory: 20Mi
+          requests:
+            cpu: 10m
+            memory: 20Mi
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: swarm-ingress
+  namespace: swarm
+spec:
+  rules:
+  - host: swarm-gateways.net
+    http:
+      paths:
+      - backend:
+          serviceName: bzzd-http
+          servicePort: 8080

@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: geth
+  namespace: swarm
+spec:
+  selector: 
+    app: geth
+  ports:
+    - protocol: TCP
+      port: 8545
+      targetPort: geth-rpc-port
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: geth-external
+  namespace: swarm
+spec:
+  selector: 
+    app: geth
+  ports:
+    - protocol: TCP
+      port: 30303
+      targetPort: geth-port
